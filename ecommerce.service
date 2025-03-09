@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve ecommerce application
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/python-app-docker-compose/backend
+Environment="FRONTEND_PATH=/home/ec2-user/python-app-docker-compose/frontend"
+ExecStart=/bin/bash -c '/home/ec2-user/myapp/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 wsgi:app'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
