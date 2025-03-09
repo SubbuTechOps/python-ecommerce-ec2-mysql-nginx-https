@@ -99,7 +99,7 @@ sudo systemctl restart mysqld
 ### 3.1 Clone the repository
 ```bash
 cd ~
-git clone https://github.com/yourusername/python-app-docker-compose.git
+git clone https://github.com/SubbuTechOps/python-ecommerce-ec2-mysql-nginx-https.git
 cd python-app-docker-compose
 ```
 
