@@ -1,0 +1,125 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  labels:
+    app: {{ .Values.backend.name }}
+    tier: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+      tier: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+        tier: backend
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps/backend-config.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets/backend-secret.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MySQL to be ready..."
+              until nc -z -w5 {{ .Release.Name }}-mysql.{{ .Release.Namespace }}.svc.cluster.local 3306; do 
+                echo "MySQL is not ready - sleeping"
+                sleep 2
+              done
+              echo "MySQL is ready!"
+        - name: check-db-connection
+          image: mysql:8.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Verifying database connection..."
+              until mysql -h{{ .Release.Name }}-mysql.{{ .Release.Namespace }}.svc.cluster.local \
+                         -u${DB_USER} \
+                         -p${DB_PASSWORD} \
+                         -e "SELECT 1"; do
+                echo "Database is not yet ready - sleeping"
+                sleep 2
+              done
+              echo "Database connection verified!"
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-backend-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-backend-secret
+                  key: DB_PASSWORD
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: "{{ .Release.Name }}-backend-config"
+            - secretRef:
+                name: "{{ .Release.Name }}-backend-secret"
+          env:
+            - name: FLASK_APP
+              value: "wsgi:app"
+            - name: PYTHONPATH
+              value: "/app"
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-mysql.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DB_PORT
+              value: "{{ .Values.mysql.service.port }}"
+          volumeMounts:
+            - name: session-data
+              mountPath: /tmp/flask_sessions
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: {{ .Values.backend.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: {{ .Values.backend.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.liveness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      volumes:
+        - name: session-data
+          emptyDir: {}
+      terminationGracePeriodSeconds: 60
+{{- end }}

@@ -1,0 +1,65 @@
+# Use Python 3.9 slim as the base image
+FROM python:3.9-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install necessary system packages
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    netcat-traditional \
+    default-libmysqlclient-dev \
+    default-mysql-client \
+    build-essential \
+    pkg-config \
+    python3-dev \
+    gcc \
+    mariadb-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy and install dependencies
+COPY backend/requirements.txt .  
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend application code and ensure monitoring package is properly set up
+COPY backend/ .
+RUN mkdir -p /app/monitoring && \
+    touch /app/monitoring/__init__.py && \
+    chmod -R 755 /app/monitoring
+
+# Copy frontend files into /app/frontend
+COPY frontend /app/frontend
+
+# Copy entrypoint script to /app and make it executable
+COPY backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Create directory for Flask sessions with proper permissions
+RUN mkdir -p /tmp/flask_sessions && \
+    chmod 777 /tmp/flask_sessions
+
+# Create a non-root user and switch to it
+RUN useradd -m appuser && \
+    chown -R appuser:appuser /app /tmp/flask_sessions
+USER appuser
+
+# Expose the application port and metrics port
+EXPOSE 5000 9090
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/api/health || exit 1
+
+# Set environment variables
+ENV PYTHONPATH=/app \
+    FLASK_APP=wsgi:app \
+    FLASK_DEBUG=false \
+    FRONTEND_PATH=/app/frontend \
+    PYTHONUNBUFFERED=1 \
+    METRICS_PORT=9090 \
+    DB_HOST=ecommerce-db \
+    DB_PORT=3306
+
+# Use entrypoint script to start application
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>ShopEasy - Signup</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .signup-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 180px);
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+
+        .signup-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .signup-container h2 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .form-group .input-group {
+            position: relative;
+        }
+
+        .form-group .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .signup-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #signupMessage {
+            text-align: center;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        #signupMessage.success {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        #signupMessage.error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <h1 class="logo">ShopEasy</h1>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/catalog.html">Catalog</a>
+                <a href="/cart.html">Cart</a>
+                <div id="userSection" class="user-section">
+                    <a href="/login.html">Login</a>
+                    <a href="/signup.html">Sign Up</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="signup-section">
+            <div class="signup-container">
+                <h2>Sign Up</h2>
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-group">
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <i class="fas fa-eye-slash password-toggle" onclick="togglePassword()"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="signup-btn">Sign Up</button>
+                </form>
+                <div id="signupMessage"></div>
+                <div class="login-link">
+                    Already have an account? <a href="/login.html">Login</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="developer-banner">
+            <div class="developer-text">
+                Developed By <span class="developer-name">SubbuTechOps</span>
+            </div>
+        </div>
+        <p>&copy; 2024 ShopEasy. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            }
+        }
+
+         // Common authentication functions
+        async function updateUserSection() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const userSection = document.getElementById('userSection');
+                
+                if (data.authenticated) {
+                    const username = data.user?.username || sessionStorage.getItem('username');
+                    userSection.innerHTML = `
+                        <span class="username">Welcome, ${username}</span>
+                        <a href="#" onclick="logout()" class="logout-btn">Logout</a>
+                    `;
+                    // Redirect if already logged in
+                    window.location.href = '/index.html';
+                } else {
+                    sessionStorage.clear();
+                    userSection.innerHTML = `
+                        <a href="/login.html">Login</a>
+                        <a href="/signup.html">Sign Up</a>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error updating user section:', error);
+                sessionStorage.clear();
+                document.getElementById('userSection').innerHTML = `
+                    <a href="/login.html">Login</a>
+                    <a href="/signup.html">Sign Up</a>
+                `;
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                sessionStorage.clear();
+                
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    throw new Error('Logout failed');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                window.location.reload();
+            }
+        }
+
+        // Handle signup form submission
+        document.getElementById('signupForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const message = document.getElementById('signupMessage');
+
+            // Basic validation
+            if (password.length < 6) {
+                message.style.color = 'red';
+                message.textContent = 'Password must be at least 6 characters long';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 201) {
+                    message.style.color = 'green';
+                    message.textContent = 'Sign up successful! Redirecting to login...';
+                    document.getElementById('signupForm').reset();
+                    
+                    // Redirect to login page after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1500);
+                } else {
+                    message.style.color = 'red';
+                    message.textContent = data.message || 'An error occurred. Please try again.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                message.style.color = 'red';
+                message.textContent = 'An unexpected error occurred. Please try again.';
+            }
+        });
+
+        // Check if already logged in
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    window.location.href = '/index.html';
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkSession();
+            await updateUserSection();
+        });
+    
+    </script>
+</body>
+</html>

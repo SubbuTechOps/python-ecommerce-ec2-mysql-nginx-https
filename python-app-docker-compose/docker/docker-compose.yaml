@@ -1,0 +1,64 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: .. 
+      dockerfile: backend/Dockerfile.backend
+    image: ecommerce-app-backend:latest
+    container_name: ecommerce-app-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../frontend:/frontend
+      - flask_sessions:/tmp/flask_sessions
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_APP: app.py
+      FLASK_RUN_HOST: 0.0.0.0
+      FLASK_RUN_PORT: 5000
+      FLASK_DEBUG: "true"
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: subbu
+      DB_PASSWORD: admin@1234
+      DB_NAME: ecommerce
+      SECRET_KEY: "ecommerce_app_secret_key_2024_secure_shopping"
+      SESSION_TYPE: "filesystem"
+      SESSION_FILE_DIR: "/tmp/flask_sessions"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: mysql:8.0
+    container_name: ecommerce-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin@1234
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: subbu
+      MYSQL_PASSWORD: admin@1234
+    volumes:
+      - db_data:/var/lib/mysql
+      - ../backend/database/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ../backend/database/02_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "subbu", "-padmin@1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  db_data:
+  flask_sessions:

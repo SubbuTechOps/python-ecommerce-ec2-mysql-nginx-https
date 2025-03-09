@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">  
+    <title>ShopEasy - Order Success</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .success-container {
+            text-align: center;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .success-icon {
+            color: #28a745;
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .success-message {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .order-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .order-details p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .continue-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .continue-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <h1 class="logo">ShopEasy</h1>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/catalog.html">Catalog</a>
+                <a href="/cart.html">Cart</a>
+                <div id="userSection" class="user-section"></div>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div class="success-container">
+            <div class="success-icon">✓</div>
+            <h2 class="success-message">Order Placed Successfully!</h2>
+            <div class="order-details">
+                <p><strong>Customer Name:</strong> <span id="customerName"></span></p>
+                <p><strong>Order Total:</strong> $<span id="orderTotal"></span></p>
+                <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+            </div>
+            <p>Thank you for your order. Your order has been received and is being processed.</p>
+            <a href="/catalog.html" class="continue-btn">Continue Shopping</a>
+        </div>
+    </main>
+    <footer>
+        <div class="developer-banner">
+            <div class="developer-text">
+                Developed By <span class="developer-name">SubbuTechOps</span>
+            </div>
+        </div>
+        <p>&copy; 2024 ShopEasy. All rights reserved.</p>
+    </footer>
+    <script>
+        async function updateUserSection() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const userSection = document.getElementById('userSection');
+                
+                if (data.authenticated) {
+                    const username = data.user?.username;
+                    userSection.innerHTML = `
+                        <span class="username">Welcome, ${username}</span>
+                        <a href="#" onclick="logout()" class="logout-btn">Logout</a>
+                    `;
+
+                    document.getElementById('customerName').textContent = username;
+                    
+                    const total = sessionStorage.getItem('orderTotal');
+                    document.getElementById('orderTotal').textContent = 
+                        total ? parseFloat(total).toFixed(2) : 'N/A';
+                    
+                    const orderId = sessionStorage.getItem('orderId');
+                    document.getElementById('orderId').textContent = orderId || 'N/A';
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Error updating user section:', error);
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                sessionStorage.clear();
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Error during logout:', error);
+                window.location.reload();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateUserSection);
+    </script>
+</body>
+</html>

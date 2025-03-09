@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>ShopEasy - Home</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <h1 class="logo">ShopEasy</h1>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/catalog.html">Catalog</a>
+                <a href="/cart.html">Cart</a>
+                <div id="userSection" class="user-section">
+                    <!-- User info will be dynamically inserted here -->
+                </div>
+            </nav>
+        </div>
+    </header>
+    <!-- Add this right after header -->
+<div class="welcome-banner">
+    <div class="welcome-text">
+        Welcome to ShopEasy! 🌟 Free shipping on orders over $50! | New arrivals every week! | Special discounts for members! | 24/7 customer support | Easy returns & exchanges | Shop now and save big! | Holiday deals coming soon!
+    </div>
+</div>
+    <!-- New Carousel Section -->
+    <section class="image-carousel">
+        <div class="carousel-container">
+            <div class="carousel-track" id="carouselTrack">
+                <div class="carousel-slide">
+                    <img src="/api/placeholder/800/400" alt="Electronics Sale" />
+                    <div class="slide-content">
+                        <h3>Electronics Sale</h3>
+                        <p>Up to 40% off on latest gadgets</p>
+                    </div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="/api/placeholder/800/400" alt="New Arrivals" />
+                    <div class="slide-content">
+                        <h3>New Arrivals</h3>
+                        <p>Check out our latest products</p>
+                    </div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="/api/placeholder/800/400" alt="Special Offers" />
+                    <div class="slide-content">
+                        <h3>Special Offers</h3>
+                        <p>Limited time deals on popular items</p>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-button prev" onclick="moveCarousel(-1)">❮</button>
+            <button class="carousel-button next" onclick="moveCarousel(1)">❯</button>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </div>
+    </section>
+
+    <main>
+        <section class="hero">
+            <h2>Discover Amazing Products</h2>
+            <p>ShopEasy makes your shopping experience easy and enjoyable!</p>
+        </section>
+        <section class="featured">
+            <h2>Featured Products</h2>
+            <div class="product-grid" id="productGrid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="developer-banner">
+            <div class="developer-text">
+                Developed By <span class="developer-name">SubbuTechOps</span>
+            </div>
+        </div>
+        <p>&copy; 2024 ShopEasy. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Carousel functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+
+        function setupCarousel() {
+            const dotsContainer = document.getElementById('carouselDots');
+            
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+
+            setInterval(() => moveCarousel(1), 5000);
+        }
+
+        function moveCarousel(direction) {
+            const track = document.getElementById('carouselTrack');
+            const dots = document.querySelectorAll('.dot');
+            
+            currentSlide = (currentSlide + direction + slides.length) % slides.length;
+            
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function goToSlide(index) {
+            const difference = index - currentSlide;
+            moveCarousel(difference);
+        }
+
+        // Existing authentication functions
+        async function updateUserSection() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const userSection = document.getElementById('userSection');
+                
+                if (data.authenticated) {
+                    const username = data.user?.username || sessionStorage.getItem('username');
+                    userSection.innerHTML = `
+                        <span class="username">Welcome, ${username}</span>
+                        <a href="#" onclick="logout()" class="logout-btn">Logout</a>
+                    `;
+                } else {
+                    sessionStorage.clear();
+                    userSection.innerHTML = `
+                        <a href="/login.html">Login</a>
+                        <a href="/signup.html">Sign Up</a>
+                    `;
+                }
+                return data.authenticated;
+            } catch (error) {
+                console.error('Error updating user section:', error);
+                sessionStorage.clear();
+                document.getElementById('userSection').innerHTML = `
+                    <a href="/login.html">Login</a>
+                    <a href="/signup.html">Sign Up</a>
+                `;
+                return false;
+            }
+        }
+
+
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                sessionStorage.clear();
+                
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    throw new Error('Logout failed');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                window.location.reload();
+            }
+        }
+
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/auth/status', { 
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                return data.authenticated;
+            } catch (error) {
+                console.error('Authentication check error:', error);
+                return false;
+            }
+        }
+
+
+        // Updated loadFeaturedProducts function
+        async function loadFeaturedProducts() {
+    try {
+        const response = await fetch('/api/products', {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch products');
+        }
+
+        const data = await response.json();
+        const grid = document.getElementById('productGrid');
+        
+        if (data && data.length > 0) {
+            const featuredProducts = data.slice(0, 3);
+            
+            featuredProducts.forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.onclick = () => window.location.href = '/catalog.html';
+                div.innerHTML = `
+                    <div class="product-icon">
+                        <i class="fas ${getProductIcon(product.name)} fa-3x"></i>
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p class="price">$${parseFloat(product.price).toFixed(2)}</p>
+                    <button class="view-details-btn">View Details</button>
+                `;
+                grid.appendChild(div);
+            });
+        } else {
+            grid.innerHTML = '<p class="no-products">No products available.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        grid.innerHTML = '<p class="error-message">Failed to load products. Please try again.</p>';
+    }
+}
+
+// Helper function to get Font Awesome icon class
+function getProductIcon(productName) {
+    const name = productName.toLowerCase();
+    if (name.includes('laptop') || name.includes('macbook')) {
+        return 'fa-laptop';
+    } else if (name.includes('phone') || name.includes('iphone')) {
+        return 'fa-mobile-alt';
+    } else if (name.includes('tablet') || name.includes('ipad')) {
+        return 'fa-tablet-alt';
+    } else if (name.includes('watch')) {
+        return 'fa-clock';
+    } else if (name.includes('airpods') || name.includes('headphones')) {
+        return 'fa-headphones';
+    } else if (name.includes('playstation') || name.includes('nintendo')) {
+        return 'fa-gamepad';
+    }
+    return 'fa-box'; // Default icon
+}
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await updateUserSection();
+                await loadFeaturedProducts();
+                setupCarousel();
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

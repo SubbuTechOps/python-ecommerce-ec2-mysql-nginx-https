@@ -1,0 +1,120 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-mysql
+  labels:
+    app: {{ .Values.mysql.name }}
+    tier: database
+spec:
+  serviceName: {{ .Release.Name }}-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.name }}
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.name }}
+        tier: database
+    spec:
+      containers:
+      - name: mysql
+        image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef: 
+              name: {{ .Release.Name }}-mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-mysql-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-mysql-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-mysql-secret
+              key: MYSQL_PASSWORD
+        ports:
+        - containerPort: {{ .Values.mysql.service.port }}
+          name: mysql
+        readinessProbe:
+          exec:
+            command: 
+              - bash
+              - -c
+              - |
+                mysql -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'SELECT 1'
+          initialDelaySeconds: {{ .Values.mysql.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.mysql.probes.readiness.periodSeconds }}
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+              - bash
+              - -c
+              - |
+                mysqladmin ping -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD
+          initialDelaySeconds: {{ .Values.mysql.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.mysql.probes.liveness.periodSeconds }}
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          exec:
+            command:
+              - bash
+              - -c
+              - |
+                mysqladmin ping -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 30
+        resources:
+          {{- toYaml .Values.mysql.resources | nindent 12 }}
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - bash
+                - -c
+                - |
+                  for i in $(seq 1 30); do
+                    if mysqladmin ping -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD; then
+                      if ! mysql -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD -e "USE $MYSQL_DATABASE"; then
+                        mysql -h 127.0.0.1 -u$MYSQL_USER -p$MYSQL_PASSWORD -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE"
+                      fi
+                      break
+                    fi
+                    sleep 2
+                  done
+      securityContext:
+        fsGroup: 999
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+      labels:
+        app: {{ .Values.mysql.name }}
+        tier: database
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.mysql.storage.storageClassName }}
+      resources:
+        requests:
+          storage: {{ .Values.mysql.storage.size }}
+{{- end }}

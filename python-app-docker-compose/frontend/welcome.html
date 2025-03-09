@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        <title>Welcome</title>
+        <link rel="stylesheet" href="/styles.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    </head>
+<body>
+    <header>
+        <div class="navbar">
+            <h1 class="logo">ShopEasy</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="catalog.html">Catalog</a>
+                <a href="cart.html">Cart</a>
+                <a href="login.html" id="logout">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="welcome-container">
+            <h2 id="welcomeMessage">Welcome!</h2>
+        </div>
+    </main>
+
+    <footer>
+        <div class="developer-banner">
+            <div class="developer-text">
+                Developed By <span class="developer-name">SubbuTechOps</span>
+            </div>
+        </div>
+        <p>&copy; 2024 ShopEasy. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Fetch user information from query parameters or session storage
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+
+        if (username) {
+            welcomeMessage.textContent = `Welcome, ${username}!`;
+        } else {
+            welcomeMessage.textContent = 'Welcome!';
+        }
+
+        // Handle logout
+        document.getElementById('logout').addEventListener('click', () => {
+            sessionStorage.clear();
+        });
+    </script>
+</body>
+</html>
