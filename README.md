@@ -14,6 +14,27 @@ This comprehensive guide documents the process of deploying a Python Flask-based
 9. [Performance Tuning](#9-performance-tuning)
 10. [Maintenance and Updates](#10-maintenance-and-updates)
 
+## Architecture
+```mermaid
+flowchart TD
+    A[EC2 Instance Setup] --> B[MySQL Database Setup]
+    B --> C[Flask Application Deployment]
+    C --> D[Gunicorn Process Management]
+    D --> E[Nginx Web Server Configuration]
+    E --> F[Domain & DNS Setup]
+    F --> G[SSL/HTTPS Implementation]
+    G --> H[Performance Optimization]
+    
+    style A fill:#90CAF9,stroke:#333,stroke-width:2px
+    style B fill:#81C784,stroke:#333,stroke-width:2px
+    style C fill:#FFD54F,stroke:#333,stroke-width:2px
+    style D fill:#FFB74D,stroke:#333,stroke-width:2px
+    style E fill:#7986CB,stroke:#333,stroke-width:2px
+    style F fill:#4DB6AC,stroke:#333,stroke-width:2px
+    style G fill:#F06292,stroke:#333,stroke-width:2px
+    style H fill:#9575CD,stroke:#333,stroke-width:2px
+```
+
 ## 1. Initial Server Setup
 
 ### 1.1 Connect to your EC2 instance
