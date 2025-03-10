@@ -34,6 +34,18 @@ flowchart TD
     style G fill:#F06292,stroke:#333,stroke-width:2px
     style H fill:#9575CD,stroke:#333,stroke-width:2px
 ```
+### This high-level flowchart shows the main components of your e-commerce application deployment in a simplified, sequential format. The key stages are:
+
+**1. EC2 Instance Setup** - Preparing the server environment
+**2. MySQL Database Setup** - Installing and configuring the database
+**3. Flask Application Deployment** - Deploying your Python application code
+**4. Gunicorn Process Management** - Setting up the WSGI server with systemd
+**5. Nginx Web Server Configuration** - Configuring the web server and proxy
+**6. Domain & DNS Setup** - Setting up Route 53 and linking your domain
+**7. SSL/HTTPS Implementation** - Securing the site with Let's Encrypt
+**8. Performance Optimization** - Tuning all components for better performance
+
+---
 
 ## 1. Initial Server Setup
 
