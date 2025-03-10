@@ -34,7 +34,9 @@ flowchart TD
     style G fill:#F06292,stroke:#333,stroke-width:2px
     style H fill:#9575CD,stroke:#333,stroke-width:2px
 ```
-### This high-level flowchart shows the main components of your e-commerce application deployment in a simplified, sequential format. The key stages are:
+### This high-level flowchart shows the main components of e-commerce application deployment in a simplified, sequential format. 
+
+#### The key stages are:
 
 **1. EC2 Instance Setup** - Preparing the server environment
 
